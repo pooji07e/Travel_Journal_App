@@ -9,11 +9,25 @@ import type { User } from "@supabase/supabase-js";
 
 export function UserNav() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | { email?: string; user_metadata?: { displayName?: string } } | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
+    // Check guest cookie
+    const hasGuestCookie = document.cookie
+      .split("; ")
+      .some((row) => row.startsWith("vintage_guest=true"));
+
+    if (hasGuestCookie) {
+      setUser({
+        email: "wanderer@journal.local",
+        user_metadata: { displayName: "Guest Explorer" },
+      });
+      setLoading(false);
+      return;
+    }
+
     const supabase = createBrowserSupabase();
 
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -36,6 +50,9 @@ export function UserNav() {
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
+      // Clear guest cookie
+      document.cookie = "vintage_guest=; path=/; max-age=0";
+
       const supabase = createBrowserSupabase();
       await supabase.auth.signOut();
       setUser(null);
@@ -68,7 +85,7 @@ export function UserNav() {
 
   const name =
     user.user_metadata?.displayName ||
-    user.user_metadata?.full_name ||
+    (user as any).user_metadata?.full_name ||
     user.email?.split("@")[0] ||
     "Traveler";
 

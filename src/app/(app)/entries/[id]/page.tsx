@@ -103,7 +103,7 @@ export default async function EntryPage({ params }: EntryPageProps) {
         {entry.tags && entry.tags.length > 0 && (
           <footer className="pt-4 border-t border-vintage-border/40 flex flex-wrap items-center gap-2">
             <span className="text-xs font-typewriter text-ink-muted">Tags:</span>
-            {entry.tags.map((t, idx) => (
+            {entry.tags.map((t: any, idx: number) => (
               <span
                 key={idx}
                 className="text-xs font-typewriter text-ink-muted bg-paper-warm px-2.5 py-0.5 rounded border border-vintage-border shadow-xs"

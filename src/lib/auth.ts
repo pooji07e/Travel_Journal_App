@@ -7,6 +7,18 @@ interface CookieToSet {
   options?: CookieOptions;
 }
 
+export const DEMO_USER = {
+  id: "00000000-0000-0000-0000-000000000001",
+  email: "wanderer@journal.local",
+  user_metadata: {
+    displayName: "Marco Polo",
+    full_name: "Marco Polo",
+  },
+  app_metadata: {},
+  aud: "authenticated",
+  created_at: new Date().toISOString(),
+};
+
 /**
  * Supabase client for Server Actions and Route Handlers
  */
@@ -26,8 +38,7 @@ export async function createServerSupabaseClient() {
             cookieStore.set(name, value, options);
           });
         } catch {
-          // The `setAll` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing sessions.
+          // Ignored if called from Server Component
         }
       },
     },
@@ -38,17 +49,28 @@ export async function createServerSupabaseClient() {
  * Helper to get the current authenticated user session on the server.
  */
 export async function getCurrentUser() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  const cookieStore = cookies();
+  const isGuest = cookieStore.get("vintage_guest")?.value === "true";
 
-  if (error || !user) {
-    return null;
+  if (isGuest) {
+    return DEMO_USER as any;
   }
 
-  return user;
+  try {
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return null;
+    }
+
+    return user;
+  } catch {
+    return null;
+  }
 }
 
 /**

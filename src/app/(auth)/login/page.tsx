@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Feather, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Feather, ArrowRight, Loader2, AlertCircle, Compass } from "lucide-react";
 import { createBrowserSupabase } from "@/lib/supabase";
 
 function LoginForm() {
@@ -18,6 +18,13 @@ function LoginForm() {
   );
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGuestEntry = () => {
+    // Set 24-hour guest cookie for instant local preview
+    document.cookie = "vintage_guest=true; path=/; max-age=86400";
+    router.push(redirectTo);
+    router.refresh();
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -89,7 +96,7 @@ function LoginForm() {
         </div>
         <h1 className="font-heading font-bold text-2xl text-ink">Open Your Journal</h1>
         <p className="font-body text-sm text-ink-muted">
-          Sign in to continue chronicling your voyages
+          Sign in to access your private travel volumes
         </p>
       </div>
 
@@ -99,6 +106,30 @@ function LoginForm() {
           <span>{error}</span>
         </div>
       )}
+
+      {/* Quick Demo / Guest Access Banner */}
+      <div className="mb-5 p-3.5 rounded border border-mustard/40 bg-paper-aged/60 text-center space-y-2 shadow-sm">
+        <p className="text-xs font-typewriter text-ink">
+          Want to test the app without setting up credentials?
+        </p>
+        <button
+          type="button"
+          onClick={handleGuestEntry}
+          className="w-full py-2 px-3 bg-mustard hover:bg-mustard-dark text-ink font-typewriter text-xs uppercase tracking-wider rounded transition-colors shadow-stamp flex items-center justify-center gap-2 font-bold cursor-pointer"
+        >
+          <Compass className="w-4 h-4 text-ink" />
+          <span>Enter as Guest Explorer (Demo Mode)</span>
+        </button>
+      </div>
+
+      <div className="relative my-4 text-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-vintage-border" />
+        </div>
+        <span className="relative bg-paper-warm px-3 text-[11px] font-typewriter uppercase tracking-wider text-ink-muted">
+          Or sign in with account
+        </span>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

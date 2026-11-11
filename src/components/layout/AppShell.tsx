@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeSwitcher } from "@/components/theme/ThemeSwitcher";
+import { UserNav } from "@/components/auth/UserNav";
 import { BookOpen, Compass, Plus, Settings, Feather } from "lucide-react";
 
 interface AppShellProps {
@@ -69,6 +70,8 @@ export function AppShell({ children }: AppShellProps) {
             <div className="h-5 w-[1px] bg-vintage-border mx-1" />
 
             <ThemeSwitcher />
+
+            <UserNav />
           </nav>
         </div>
       </header>

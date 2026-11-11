@@ -4,7 +4,6 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Feather, ArrowRight, Loader2, AlertCircle } from "lucide-react";
-import { signInAction } from "@/server/auth";
 import { createBrowserSupabase } from "@/lib/supabase";
 
 function LoginForm() {
@@ -26,32 +25,58 @@ function LoginForm() {
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const result = await signInAction(formData);
+    const email = (formData.get("email") as string)?.trim();
+    const password = formData.get("password") as string;
 
-    if (result.error) {
-      setError(result.error);
+    if (!email || !password) {
+      setError("Please provide both email and password.");
       setLoading(false);
-    } else {
-      router.push(redirectTo);
-      router.refresh();
+      return;
+    }
+
+    try {
+      const supabase = createBrowserSupabase();
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+      } else {
+        router.push(redirectTo);
+        router.refresh();
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to sign in. Please check your credentials.";
+      setError(message);
+      setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
     setError(null);
     setGoogleLoading(true);
-    const supabase = createBrowserSupabase();
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
-          redirectTo
-        )}`,
-      },
-    });
 
-    if (oauthError) {
-      setError(oauthError.message);
+    try {
+      const supabase = createBrowserSupabase();
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+            redirectTo
+          )}`,
+        },
+      });
+
+      if (oauthError) {
+        setError(oauthError.message);
+        setGoogleLoading(false);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to initiate Google sign in.";
+      setError(message);
       setGoogleLoading(false);
     }
   };
@@ -88,6 +113,7 @@ function LoginForm() {
             name="email"
             type="email"
             required
+            autoComplete="email"
             placeholder="wanderer@odyssey.com"
             className="w-full px-3 py-2 text-sm bg-vintage-card border border-vintage-border rounded focus:outline-none focus:ring-1 focus:ring-teal text-ink placeholder:text-ink-muted/50"
           />
@@ -106,6 +132,7 @@ function LoginForm() {
             type="password"
             required
             minLength={6}
+            autoComplete="current-password"
             placeholder="••••••••••••"
             className="w-full px-3 py-2 text-sm bg-vintage-card border border-vintage-border rounded focus:outline-none focus:ring-1 focus:ring-teal text-ink placeholder:text-ink-muted/50"
           />
@@ -135,7 +162,7 @@ function LoginForm() {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading || googleLoading}
-          className="w-full py-2.5 px-4 bg-paper-aged hover:bg-paper border border-vintage-border text-ink font-typewriter text-xs uppercase tracking-wider rounded transition-colors shadow-stamp flex items-center justify-center gap-2 disabled:opacity-60"
+          className="w-full py-2.5 px-4 bg-paper-aged hover:bg-paper border border-vintage-border text-ink font-typewriter text-xs uppercase tracking-wider rounded transition-colors shadow-stamp flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
         >
           {googleLoading ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin text-mustard" />

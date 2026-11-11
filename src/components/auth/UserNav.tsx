@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabase } from "@/lib/supabase";
-import { signOutAction } from "@/server/auth";
-import { LogOut, User as UserIcon, Feather } from "lucide-react";
+import { LogOut, Feather, Loader2 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 export function UserNav() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     const supabase = createBrowserSupabase();
@@ -32,6 +32,21 @@ export function UserNav() {
       subscription.unsubscribe();
     };
   }, []);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      const supabase = createBrowserSupabase();
+      await supabase.auth.signOut();
+      setUser(null);
+      router.push("/login");
+      router.refresh();
+    } catch (e) {
+      console.error("Sign out error:", e);
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -69,17 +84,21 @@ export function UserNav() {
         <span className="max-w-[100px] truncate">{name}</span>
       </div>
 
-      <form action={signOutAction}>
-        <button
-          type="submit"
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-typewriter uppercase tracking-wider text-rose-dark hover:text-rose hover:bg-rose/10 border border-vintage-border bg-paper-warm transition-colors shadow-stamp"
-          title="Sign out of journal"
-          aria-label="Sign out"
-        >
+      <button
+        type="button"
+        onClick={handleSignOut}
+        disabled={signingOut}
+        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-typewriter uppercase tracking-wider text-rose-dark hover:text-rose hover:bg-rose/10 border border-vintage-border bg-paper-warm transition-colors shadow-stamp disabled:opacity-50 cursor-pointer"
+        title="Sign out of journal"
+        aria-label="Sign out"
+      >
+        {signingOut ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
           <LogOut className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Depart</span>
-        </button>
-      </form>
+        )}
+        <span className="hidden md:inline">Depart</span>
+      </button>
     </div>
   );
 }

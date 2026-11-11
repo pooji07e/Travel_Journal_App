@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BookOpen, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
-import { signUpAction } from "@/server/auth";
 import { createBrowserSupabase } from "@/lib/supabase";
 
 export default function SignupPage() {
@@ -21,13 +20,44 @@ export default function SignupPage() {
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const result = await signUpAction(formData);
+    const displayName = (formData.get("displayName") as string)?.trim();
+    const email = (formData.get("email") as string)?.trim();
+    const password = formData.get("password") as string;
 
-    if (result.error) {
-      setError(result.error);
+    if (!email || !password) {
+      setError("Please provide both email and password.");
       setLoading(false);
-    } else {
-      setSuccess(true);
+      return;
+    }
+
+    try {
+      const supabase = createBrowserSupabase();
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            displayName: displayName || email.split("@")[0],
+          },
+        },
+      });
+
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+      } else {
+        // If session returned immediately (no email confirm required), navigate to trips
+        if (data.session) {
+          router.push("/trips");
+          router.refresh();
+        } else {
+          setSuccess(true);
+          setLoading(false);
+        }
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create account.";
+      setError(message);
       setLoading(false);
     }
   };
@@ -35,16 +65,23 @@ export default function SignupPage() {
   const handleGoogleSignUp = async () => {
     setError(null);
     setGoogleLoading(true);
-    const supabase = createBrowserSupabase();
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/trips`,
-      },
-    });
 
-    if (oauthError) {
-      setError(oauthError.message);
+    try {
+      const supabase = createBrowserSupabase();
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/trips`,
+        },
+      });
+
+      if (oauthError) {
+        setError(oauthError.message);
+        setGoogleLoading(false);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to initiate Google sign up.";
+      setError(message);
       setGoogleLoading(false);
     }
   };
@@ -117,6 +154,7 @@ export default function SignupPage() {
                 name="email"
                 type="email"
                 required
+                autoComplete="email"
                 placeholder="explorer@atlas.com"
                 className="w-full px-3 py-2 text-sm bg-vintage-card border border-vintage-border rounded focus:outline-none focus:ring-1 focus:ring-teal text-ink placeholder:text-ink-muted/50"
               />
@@ -135,6 +173,7 @@ export default function SignupPage() {
                 type="password"
                 required
                 minLength={6}
+                autoComplete="new-password"
                 placeholder="••••••••••••"
                 className="w-full px-3 py-2 text-sm bg-vintage-card border border-vintage-border rounded focus:outline-none focus:ring-1 focus:ring-teal text-ink placeholder:text-ink-muted/50"
               />
@@ -166,7 +205,7 @@ export default function SignupPage() {
               type="button"
               onClick={handleGoogleSignUp}
               disabled={loading || googleLoading}
-              className="w-full py-2.5 px-4 bg-paper-aged hover:bg-paper border border-vintage-border text-ink font-typewriter text-xs uppercase tracking-wider rounded transition-colors shadow-stamp flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full py-2.5 px-4 bg-paper-aged hover:bg-paper border border-vintage-border text-ink font-typewriter text-xs uppercase tracking-wider rounded transition-colors shadow-stamp flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
             >
               {googleLoading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-mustard" />

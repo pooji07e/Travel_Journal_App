@@ -1,0 +1,119 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Mood {
+  JOYFUL
+  CALM
+  NOSTALGIC
+  TIRED
+  ADVENTUROUS
+  ROMANTIC
+  HOMESICK
+}
+
+enum EntryStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum MediaType {
+  PHOTO
+  VIDEO
+}
+
+model User {
+  id                String   @id // matches Supabase auth user id
+  email             String   @unique
+  displayName       String?
+  theme             String   @default("sepia")
+  storageUsedBytes  BigInt   @default(0)
+  storageQuotaBytes BigInt   @default(1073741824) // 1 GB
+  trips             Trip[]
+  entries           Entry[]
+  tags              Tag[]
+  createdAt         DateTime @default(now())
+}
+
+model Trip {
+  id           String    @id @default(uuid())
+  userId       String
+  title        String
+  startDate    DateTime?
+  endDate      DateTime?
+  coverMediaId String?
+  entries      Entry[]
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Entry {
+  id         String      @id @default(uuid())
+  userId     String
+  tripId     String
+  title      String
+  body       Json
+  bodyText   String      @default("")
+  date       DateTime
+  mood       Mood?
+  status     EntryStatus @default(DRAFT)
+  placeName  String?
+  lat        Float?
+  lng        Float?
+  spotifyUrl String?
+  media      Media[]
+  tags       EntryTag[]
+  trip       Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([userId, date])
+  @@index([tripId])
+}
+
+model Media {
+  id          String    @id @default(uuid())
+  entryId     String
+  userId      String
+  path        String
+  type        MediaType
+  caption     String?
+  sizeBytes   BigInt
+  durationSec Int?
+  width       Int?
+  height      Int?
+  thumbPath   String?
+  position    Int       @default(0)
+  entry       Entry     @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([entryId, position])
+}
+
+model Tag {
+  id      String     @id @default(uuid())
+  userId  String
+  name    String
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries EntryTag[]
+
+  @@unique([userId, name])
+}
+
+model EntryTag {
+  entryId String
+  tagId   String
+  entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([entryId, tagId])
+}

@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Lora:ital,wght@0,400..700;1,400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Special+Elite&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Vintage Cozy "Sepia" Theme Tokens */
+  --paper: #F4ECD8;
+  --paper-warm: #EFE4CA;
+  --paper-aged: #E5D6B6;
+  --ink: #5B4636;
+  --ink-light: #7E6552;
+  --ink-muted: #9E8570;
+  --teal: #5F7F7A;
+  --teal-dark: #435B57;
+  --teal-light: #7E9E99;
+  --rose: #C48B8B;
+  --rose-dark: #9F6262;
+  --rose-light: #DEB3B3;
+  --mustard: #C9A24B;
+  --mustard-dark: #9E7D2E;
+  --mustard-light: #E0BC6D;
+  --vintage-border: rgba(91, 70, 54, 0.2);
+  --vintage-card: #FAF6ED;
+  --vintage-shadow: rgba(91, 70, 54, 0.15);
+  --vintage-tape: rgba(224, 188, 109, 0.45);
+
+  /* Typography Font Families */
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Lora', Georgia, serif;
+  --font-typewriter: 'Special Elite', 'Courier Prime', monospace;
+  --font-handwriting: 'Caveat', cursive;
+}
+
+[data-theme="midnight"] {
+  /* Midnight Dark Theme Tokens (Variable Swap) */
+  --paper: #1B1815;
+  --paper-warm: #24201B;
+  --paper-aged: #2E2822;
+  --ink: #F2E8DC;
+  --ink-light: #D5C5B5;
+  --ink-muted: #A39384;
+  --teal: #6C928C;
+  --teal-dark: #50716B;
+  --teal-light: #8BB0AA;
+  --rose: #D19A9A;
+  --rose-dark: #AD7272;
+  --rose-light: #E7BFBF;
+  --mustard: #D8B25C;
+  --mustard-dark: #AA8737;
+  --mustard-light: #ECD088;
+  --vintage-border: rgba(242, 232, 220, 0.18);
+  --vintage-card: #221E1A;
+  --vintage-shadow: rgba(0, 0, 0, 0.45);
+  --vintage-tape: rgba(216, 178, 92, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Paper grain overlay texture */
+.paper-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Soft vignette around page edges for vintage journal atmosphere */
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  box-shadow: inset 0 0 100px var(--vintage-shadow);
+  opacity: 0.5;
+}
+
+/* Torn-edge divider simulation */
+.torn-divider {
+  height: 6px;
+  background: radial-gradient(circle at 10px -5px, transparent 12px, var(--vintage-border) 13px, transparent 14px);
+  background-size: 20px 20px;
+  opacity: 0.6;
+}
+
+/* Washi tape visual motif */
+.washi-tape {
+  position: relative;
+}
+.washi-tape::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1deg);
+  width: 90px;
+  height: 24px;
+  background: var(--vintage-tape);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 2px dashed rgba(255, 255, 255, 0.4);
+  border-right: 2px dashed rgba(255, 255, 255, 0.4);
+  z-index: 10;
+}
+
+/* Stamp motif border */
+.stamp-border {
+  border: 2px dashed var(--vintage-border);
+  padding: 4px;
+  background: var(--vintage-card);
+}
+
+/* Polaroid card base with slight rotation helpers */
+.polaroid-frame {
+  background: var(--vintage-card);
+  padding: 12px 12px 36px 12px;
+  border: 1px solid var(--vintage-border);
+  box-shadow: var(--vintage-shadow) 0 4px 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.polaroid-frame:hover {
+  box-shadow: var(--vintage-shadow) 0 8px 24px;
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* Respect user's prefers-reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
